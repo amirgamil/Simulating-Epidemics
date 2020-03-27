@@ -22,14 +22,16 @@
 
     var data_healthy = [];
     var data_infected = []
-    var point_count = 99;
-    var infected = 5;
+    var change = []
+    var point_count = 70;
+    var infected = 20;
     var svg = d3.select("body").append("svg");
     for (var i = 0; i < point_count; i++){
       var obj = {
         radius: 15,
         angle: d3.randomUniform(0, 3600)() / 10,
         speed: d3.randomUniform(1, 5)(),
+        infected: false,
       }
       obj.pos = [
         d3.randomUniform(obj.radius, width - obj.radius)(),
@@ -43,6 +45,7 @@
         radius: 15,
         angle: d3.randomUniform(0, 3600)() / 10,
         speed: d3.randomUniform(1, 5)(),
+        infected: true,
       }
       obj.pos = [
         d3.randomUniform(obj.radius, width - obj.radius)(),
@@ -64,6 +67,8 @@
         .style("fill", "black");
 
     
+
+    
     d3.timer(_ => { redrawHelper(data_healthy, data_infected); });
 
     function redrawHelper(data_healthy){
@@ -81,18 +86,31 @@
       } else {
         circle_infected.attr("transform", d => "translate(" + d.pos + ")");
         circle_infected.style("fill", "red");
+        // var circles_to_change = svg.selectAll("circle")
+        //                         .data(change).enter()
+        //                         .append("circle")
+        //                         .attr("r", => d.radius)
+        //                         .style("fill", "white");
       }
+    }
+
+    function addObjectToChangeList(i) {
+      change.append(circle_healthy[i]);
     }
 
     function update(data){
       data.forEach((d, i) => {  
-        // Detect collisions      
+        // Detect collisions 
         for (var i0 = 0, l = data.length; i0 < l; i0++){
           var target = data[i0];
+
           if (i !== i0 && geometric.lineLength([d.pos, target.pos]) < d.radius + target.radius){
-            
+            //window.alert(d.infected)
+            if (target.infected) {
+              change.append(i);
+            }
             var dCurr = JSON.parse(JSON.stringify(d));
-            //
+            
             d.angle = target.angle;
             d.speed = target.speed;
             target.speed = dCurr.speed;
