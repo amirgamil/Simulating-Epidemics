@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+    }
+    circle {
+      fill: steelblue;
+      stroke: white;
+    }
+  </style>
+</head>
+<body>
+  <script src="https://d3js.org/d3-selection.v1.min.js"></script>
+  <script src="https://d3js.org/d3-random.v1.min.js"></script>
+  <script src="https://d3js.org/d3-timer.v1.min.js"></script>
+  <script src="https://unpkg.com/geometric@1.0.6/build/geometric.min.js"></script>
+  <script>
+    var width = window.innerWidth-5, height = window.innerHeight-5;
+
+    var data_healthy = [];
+    var data_infected = []
+    var point_count = 99;
+    var infected = 5;
+    var svg = d3.select("body").append("svg");
+    for (var i = 0; i < point_count; i++){
+      var obj = {
+        radius: 15,
+        angle: d3.randomUniform(0, 3600)() / 10,
+        speed: d3.randomUniform(1, 5)(),
+      }
+      obj.pos = [
+        d3.randomUniform(obj.radius, width - obj.radius)(),
+        d3.randomUniform(obj.radius, height - obj.radius)()
+      ];
+      data_healthy.push(obj);
+    }
+
+    for (var i = 0; i < infected; i++) {
+      var obj = {
+        radius: 15,
+        angle: d3.randomUniform(0, 3600)() / 10,
+        speed: d3.randomUniform(1, 5)(),
+      }
+      obj.pos = [
+        d3.randomUniform(obj.radius, width - obj.radius)(),
+        d3.randomUniform(obj.radius, height - obj.radius)()
+      ];
+      data_infected.push(obj);
+    }
+
+    var circle = svg.selectAll("circle")
+        .data(data_healthy)
+      .enter().append("circle")
+        .attr("r", d => d.radius)
+        .style("fill", "black");
+
+    var circle_infected = svg.selectAll("circle")
+        .data(data_infected)
+      .enter().append("circle")
+        .attr("r", d => d.radius)
+        .style("fill", "red");
+
+    d3.timer(_ => { redrawHelper(data_healthy, data_infected); });
+
+    function redrawHelper(data_healthy){
+      redraw(update(data_healthy));
+      redraw(update(data_infected));
+    }
+
+    function redraw(data){
+      width = window.innerWidth;
+      height = window.innerHeight;
+      svg.attr("width", width).attr("height", height);
+      
+      circle.attr("transform", d => "translate(" + d.pos + ")");
+      //circle.style("fill", "black");
+    }
+
+    function update(data){
+      data.forEach((d, i) => {  
+        // Detect collisions      
+        for (var i0 = 0, l = data.length; i0 < l; i0++){
+          var target = data[i0];
+          if (i !== i0 && geometric.lineLength([d.pos, target.pos]) < d.radius + target.radius){
+            
+            var dCurr = JSON.parse(JSON.stringify(d));
+            //
+            d.angle = target.angle;
+            d.speed = target.speed;
+            target.speed = dCurr.speed;
+            target.angle = dCurr.angle;
+          }
+        }
+
+        // Detect horizontal walls
+        if (d.pos[0] <= d.radius || d.pos[0] >= width - d.radius){
+          d.angle = geometric.angleReflect(d.angle, 90);
+        }
+
+        // Detect vertical walls
+        if (d.pos[1] <= d.radius || d.pos[1] >= height - d.radius){
+          d.angle = geometric.angleReflect(d.angle, 0);
+        }
+
+        // Translate the point
+        d.pos = geometric.pointTranslate(d.pos, d.angle, d.speed);
+      });
+      return data;
+    }
+  </script>
+</body>
+</html>
