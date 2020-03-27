@@ -51,32 +51,37 @@
       data_infected.push(obj);
     }
 
-    var circle = svg.selectAll("circle")
-        .data(data_healthy)
-      .enter().append("circle")
-        .attr("r", d => d.radius)
-        .style("fill", "black");
-
     var circle_infected = svg.selectAll("circle")
         .data(data_infected)
       .enter().append("circle")
         .attr("r", d => d.radius)
         .style("fill", "red");
 
+    var circle_healthy = svg.selectAll("circle")
+        .data(data_healthy)
+      .enter().append("circle")
+        .attr("r", d => d.radius)
+        .style("fill", "black");
+
+    
     d3.timer(_ => { redrawHelper(data_healthy, data_infected); });
 
     function redrawHelper(data_healthy){
-      redraw(update(data_healthy));
-      redraw(update(data_infected));
+      redraw(update(data_healthy), true);
+      redraw(update(data_infected), false);
     }
 
-    function redraw(data){
+    function redraw(data, healthy){
       width = window.innerWidth;
       height = window.innerHeight;
       svg.attr("width", width).attr("height", height);
       
-      circle.attr("transform", d => "translate(" + d.pos + ")");
-      //circle.style("fill", "black");
+      if (healthy){
+        circle_healthy.attr("transform", d => "translate(" + d.pos + ")");
+      } else {
+        circle_infected.attr("transform", d => "translate(" + d.pos + ")");
+        circle_infected.style("fill", "red");
+      }
     }
 
     function update(data){
